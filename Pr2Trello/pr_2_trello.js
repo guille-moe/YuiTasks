@@ -7,8 +7,8 @@ module.exports = function(context, cb) {
 
 class Pr2Trello {
   constructor(context, cb) {
-    this.data     = context.data;
-    this.secret   = context.secret;
+    this.data     = context.body;
+    this.secret   = context.data;
     this.respond  = cb;
     this.card_ids = [];
   }
@@ -20,7 +20,7 @@ class Pr2Trello {
   }
 
   getCards() {
-    http(this.getCardsOptions(), this.procCards);
+    http(this.getCardsOptions(), (error, response, body) => this.procCards(error, response, body));
   }
 
   procCards(error, response, body) {
@@ -40,16 +40,16 @@ class Pr2Trello {
   }
 
   globalAck(card_id) {
-    this.card_ids = this.card_id.filter((id) => { return id != card_id; });
+    this.card_ids = this.card_ids.filter((id) => { return id != card_id; });
     if (this.card_ids.length == 0) {
-      this.callback(null, { ok: "ack" })
+      this.respond(null, { ok: "ack" })
     }
   }
 
   /********#######+++++++=======~~~~~~------~~~~~~=======+++++++#######*******/
 
   needToClose() {
-    return this.isValidContext() && this.isMergedPR() && this.isPRValidOwner() && this.hasTrelloInfo();
+    return (this.isValidContext() && this.isMergedPR() && this.isPRValidOwner() && this.hasTrelloInfo());
   }
 
   isValidContext() {
@@ -74,7 +74,7 @@ class Pr2Trello {
 
   cardsToMove(data) {
     return data.cards.reduce((arr, card) => {
-      if (this.needToMovethis(data)) {
+      if (this.needToMove(data)) {
         arr.push(card.id);
         return arr;
       }
@@ -104,6 +104,6 @@ class Pr2Trello {
   }
 
   authParams() {
-    return `?key=${this.trello_key}&token=${this.trello_token}`;
+    return `?key=${this.secret.trello_key}&token=${this.secret.trello_token}`;
   }
 }
