@@ -1,5 +1,6 @@
 "use strict";
-const http = require('request@2.81.0');
+const http = require("request@2.81.0");
+const TRELLO_URL = "https://api.trello.com/1/"
 
 module.exports = function(context, cb) {
   new Pr2Trello(context, cb).run();
@@ -10,12 +11,14 @@ class Pr2Trello {
     this.data     = context.body;
     this.secret   = context.data;
     this.respond  = cb;
-    this.card_ids = [];
+    this.cardIds = [];
   }
 
   run() {
     if (this.needToClose()) {
       this.getCards();
+    } else {
+      throw new Error("invalid parameters");
     }
   }
 
@@ -27,22 +30,24 @@ class Pr2Trello {
     if (error) {
       throw new Error(error);
     }
-    this.card_ids = this.cardsToMove(JSON.parse(body));
-    if (this.card_ids.length > 0) {
-      for(let card_id of this.card_ids) {
-        this.moveCard(card_id);
+    this.cardIds = this.cardsToMove(JSON.parse(body));
+    if (this.cardIds.length > 0) {
+      for(let cardId of this.cardIds) {
+        this.moveCard(cardId);
       }
+    } else {
+      this.ack();
     }
   }
 
-  moveCard(card_id) {
-    http(this.moveCardOptions(card_id), () => { this.globalAck(card_id) });
+  moveCard(cardId) {
+    http(this.moveCardOptions(cardId), () => { this.globalAck(cardId) });
   }
 
-  globalAck(card_id) {
-    this.card_ids = this.card_ids.filter((id) => { return id != card_id; });
-    if (this.card_ids.length == 0) {
-      this.respond(null, { ok: "ack" })
+  globalAck(cardId) {
+    this.cardIds = this.cardIds.filter((id) => { return id != cardId; });
+    if (this.cardIds.length == 0) {
+      this.ack();
     }
   }
 
@@ -83,27 +88,31 @@ class Pr2Trello {
 
   getCardsOptions() {
     return {
-      method: 'GET',
-      url: `https://api.trello.com/1/search${this.authParams()}`,
+      method: "GET",
+      url: `${TRELLO_URL}search${this.authParams()}`,
       qs: {
         query: this.data.pull_request.html_url,
         idBoards: this.secret.trello_board,
-        modelTypes: 'cards',
-        card_attachments: 'true',
-        partial: 'false'
+        modelTypes: "cards",
+        card_attachments: "true",
+        partial: "false"
       }
     };
   }
 
-  moveCardOptions(card_id) {
+  moveCardOptions(cardId) {
     return {
-      method: 'PUT',
-      url: `https://api.trello.com/1/cards/${card_id}${this.authParams()}`,
+      method: "PUT",
+      url: `${TRELLO_URL}cards/${cardId}${this.authParams()}`,
       qs: { idList: this.secret.trello_list }
     };
   }
 
   authParams() {
     return `?key=${this.secret.trello_key}&token=${this.secret.trello_token}`;
+  }
+
+  ack() {
+    this.respond(null, {ack; true});
   }
 }
