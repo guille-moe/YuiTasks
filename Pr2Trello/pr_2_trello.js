@@ -1,11 +1,12 @@
-const http = require("request");
+"use strict";
+const http = require('request@2.81.0');
 
 module.exports = function(context, cb) {
-  new Pr2Trello({context, cb}).run();
+  new Pr2Trello(context, cb).run();
 };
 
 class Pr2Trello {
-  constructor({context, cb}) {
+  constructor(context, cb) {
     this.data     = context.data;
     this.secret   = context.secret;
     this.respond  = cb;
@@ -19,27 +20,27 @@ class Pr2Trello {
   }
 
   getCards() {
-    http(getCardsOptions(), this.procCards);
+    http(this.getCardsOptions(), this.procCards);
   }
 
   procCards(error, response, body) {
     if (error) {
       throw new Error(error);
     }
-    this.card_ids = cardsToMove(JSON.parse(body));
+    this.card_ids = this.cardsToMove(JSON.parse(body));
     if (this.card_ids.length > 0) {
       for(let card_id of this.card_ids) {
-        moveCard(card_id);
+        this.moveCard(card_id);
       }
     }
   }
 
   moveCard(card_id) {
-    http(moveCardOptions(card_id), () => this.globalAck(card_id));
+    http(this.moveCardOptions(card_id), () => { this.globalAck(card_id) });
   }
 
   globalAck(card_id) {
-    this.card_ids = this.card_id.filter(id => id != card_id);
+    this.card_ids = this.card_id.filter((id) => { return id != card_id; });
     if (this.card_ids.length == 0) {
       this.callback(null, { ok: "ack" })
     }
@@ -48,7 +49,7 @@ class Pr2Trello {
   /********#######+++++++=======~~~~~~------~~~~~~=======+++++++#######*******/
 
   needToClose() {
-    return isValidContext() && isMergedPR() && isPRValidOwner() && hasTrelloInfo();
+    return this.isValidContext() && this.isMergedPR() && this.isPRValidOwner() && this.hasTrelloInfo();
   }
 
   isValidContext() {
@@ -73,8 +74,9 @@ class Pr2Trello {
 
   cardsToMove(data) {
     return data.cards.reduce((arr, card) => {
-      if (needToMove(data)) {
+      if (this.needToMovethis(data)) {
         arr.push(card.id);
+        return arr;
       }
     }, []);
   }
@@ -82,7 +84,7 @@ class Pr2Trello {
   getCardsOptions() {
     return {
       method: 'GET',
-      url: `https://api.trello.com/1/search${this.authParams()}`
+      url: `https://api.trello.com/1/search${this.authParams()}`,
       qs: {
         query: this.data.pull_request.html_url,
         idBoards: this.secret.trello_board,
@@ -102,6 +104,6 @@ class Pr2Trello {
   }
 
   authParams() {
-    return `?key=${this.trello_key}&token=${this.trello_token}`
+    return `?key=${this.trello_key}&token=${this.trello_token}`;
   }
 }
