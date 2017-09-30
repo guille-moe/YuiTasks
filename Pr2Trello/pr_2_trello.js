@@ -1,6 +1,6 @@
 "use strict";
 const http = require("request@2.81.0");
-const TRELLO_URL = "https://api.trello.com/1/"
+const TRELLO_URL = "https://api.trello.com/1/";
 
 module.exports = function(context, cb) {
   new Pr2Trello(context, cb).run();
