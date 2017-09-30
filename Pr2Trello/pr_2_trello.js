@@ -113,6 +113,6 @@ class Pr2Trello {
   }
 
   ack() {
-    this.respond(null, {ack; true});
+    this.respond(null, {ack: true});
   }
 }
