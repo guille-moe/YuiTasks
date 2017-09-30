@@ -18,7 +18,7 @@ class Pr2Trello {
     if (this.needToClose()) {
       this.getCards();
     } else {
-      throw new Error("invalid parameters");
+      this.respond(null, {ack: false});
     }
   }
 
