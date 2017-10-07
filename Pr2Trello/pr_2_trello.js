@@ -1,5 +1,7 @@
 "use strict";
 const http = require("request@2.81.0");
+const URL = require('url');
+
 const TRELLO_URL = "https://api.trello.com/1/";
 
 module.exports = function(context, cb) {
@@ -18,7 +20,7 @@ class Pr2Trello {
     if (this.needToClose()) {
       this.getCards();
     } else {
-      this.respond(null, {ack: false});
+      this.ack(false);
     }
   }
 
@@ -36,7 +38,7 @@ class Pr2Trello {
         this.moveCard(cardId);
       }
     } else {
-      this.ack();
+      this.ack(null);
     }
   }
 
@@ -47,7 +49,7 @@ class Pr2Trello {
   globalAck(cardId) {
     this.cardIds = this.cardIds.filter((id) => { return id != cardId; });
     if (this.cardIds.length == 0) {
-      this.ack();
+      this.ack(true);
     }
   }
 
@@ -91,7 +93,7 @@ class Pr2Trello {
       method: "GET",
       url: `${TRELLO_URL}search${this.authParams()}`,
       qs: {
-        query: this.data.pull_request.html_url,
+        query: URL.parse(this.data.pull_request.html_url).pathname,
         idBoards: this.secret.trello_board,
         modelTypes: "cards",
         card_attachments: "true",
@@ -112,7 +114,7 @@ class Pr2Trello {
     return `?key=${this.secret.trello_key}&token=${this.secret.trello_token}`;
   }
 
-  ack() {
-    this.respond(null, {ack: true});
+  ack(val) {
+    this.respond(null, {ack: val});
   }
 }
