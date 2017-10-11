@@ -1,11 +1,15 @@
 "use strict";
-const http = require("request@2.81.0");
+const http = require("request");
 const URL = require('url');
 
 const TRELLO_URL = "https://api.trello.com/1/";
 
 module.exports = function(context, cb) {
-  new Pr2Trello(context, cb).run();
+  if (context && cb) {
+    return new Pr2Trello(context, cb).run(); // WebTask mode
+  } else {
+    return Pr2Trello; // Test mode
+  }
 };
 
 class Pr2Trello {
@@ -25,7 +29,7 @@ class Pr2Trello {
   }
 
   getCards() {
-    http(this.getCardsOptions(), (error, response, body) => this.procCards(error, response, body));
+    http.get(this.getCardsOptions(), (error, response, body) => this.procCards(error, response, body));
   }
 
   procCards(error, response, body) {
@@ -43,7 +47,7 @@ class Pr2Trello {
   }
 
   moveCard(cardId) {
-    http(this.moveCardOptions(cardId), () => { this.globalAck(cardId) });
+    http.put(this.moveCardOptions(cardId), () => { this.globalAck(cardId) });
   }
 
   globalAck(cardId) {
@@ -56,11 +60,11 @@ class Pr2Trello {
   /********#######+++++++=======~~~~~~------~~~~~~=======+++++++#######*******/
 
   needToClose() {
-    return (this.isValidContext() && this.isMergedPR() && this.isPRValidOwner() && this.hasTrelloInfo());
+    return (this.hasMinimalDataStruct() && this.isMergedPR() && this.isPRValidOwner() && this.hasTrelloInfo());
   }
 
-  isValidContext() {
-    return !!this.data && !!this.data.action;
+  hasMinimalDataStruct() {
+    return !!this.data && !!this.data.action && !!this.data.pull_request;
   }
 
   isMergedPR() {
@@ -81,16 +85,15 @@ class Pr2Trello {
 
   cardsToMove(data) {
     return data.cards.reduce((arr, card) => {
-      if (this.needToMove(data)) {
+      if (this.needToMove(card)) {
         arr.push(card.id);
-        return arr;
       }
+      return arr;
     }, []);
   }
 
   getCardsOptions() {
     return {
-      method: "GET",
       url: `${TRELLO_URL}search${this.authParams()}`,
       qs: {
         query: URL.parse(this.data.pull_request.html_url).pathname,
@@ -104,7 +107,6 @@ class Pr2Trello {
 
   moveCardOptions(cardId) {
     return {
-      method: "PUT",
       url: `${TRELLO_URL}cards/${cardId}${this.authParams()}`,
       qs: { idList: this.secret.trello_list }
     };
