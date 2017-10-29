@@ -34,6 +34,20 @@ let trelloCards = {
     {id: "e", idList: "pending"}
   ]
 };
+let trelloLists = [
+  {
+    id: "a",
+    name: " Pending !"
+  },
+  {
+    id: "b",
+    name: "Done"
+  },
+  {
+    id: "c",
+    name: "Freeze"
+  }
+];
 let described = null;
 
 
@@ -162,6 +176,52 @@ describe("Pr2Trello", function() {
       cardIds = described.cardsToMove(trelloCards);
       expect(cardIds).to.eql(["a","b","e"]);
     });
+  });
+
+  describe("hasListId", function() {
+    it("return true when trello_list is present", function() {
+      expect(described.hasListId()).to.be.true;
+    });
+
+    it("return true when find list based on trello_list_nane using a request", function() {
+      described =  new Pr2Trello({data: {trello_list_name: "aname"}}, callback);
+      sinon.stub(request, "get")       .callsFake((opt, cb) => cb());
+      sinon.stub(described, "findList").callsFake(() => described.secret.trello_list = "ok");
+
+      expect(described.hasListId()).to.be.true;
+      expect(!!described.secret.trello_list).to.be.true;
+      expect(request.get.called).to.be.true
+      expect(described.findList.called).to.be.true
+      request.get.restore();
+      described.findList.restore();
+    });
+
+    it("return false when no valid trello_list and trello_list_nane", function() {
+      described =  new Pr2Trello({data: {trello_list_name: "aname"}}, callback);
+      sinon.stub(request, "get")       .callsFake((opt, cb) => cb());
+      sinon.stub(described, "findList").callsFake(() => {});
+
+      expect(described.hasListId()).to.be.false;
+      expect(!!described.secret.trello_list).to.be.false;
+      expect(request.get.called).to.be.true
+      expect(described.findList.called).to.be.true
+      request.get.restore();
+      described.findList.restore();
+    });
+  })
+
+  describe("findList", function() {
+    it("assign the list id based on name", function() {
+      described = new Pr2Trello({data: {trello_list_name: " Done   "}}, callback);
+      described.findList(false, {}, JSON.stringify(trelloLists));
+      expect(described.secret.trello_list).to.eql("b");
+    })
+
+    it("do nothing cleanly", function() {
+      described = new Pr2Trello({data: {trello_list_name: "Done"}}, callback);
+      described.findList(false, {}, JSON.stringify([]));
+      expect(described.secret.trello_list).to.eql(undefined);
+    })
   });
 
   // Checkers (return boolean)

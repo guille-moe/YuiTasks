@@ -76,11 +76,29 @@ class Pr2Trello {
   }
 
   hasTrelloInfo() {
-    return !!this.secret.trello_key && !!this.secret.trello_token && !!this.secret.trello_board && !!this.secret.trello_list;
+    return !!this.secret.trello_key && !!this.secret.trello_token && !!this.secret.trello_board && this.hasListId();
   }
 
   needToMove(card) {
     return card.idList != this.secret.trello_list;
+  }
+
+  hasListId() {
+    let present = !!this.secret.trello_list;
+    if (!present && this.secret.trello_list_name) {
+      http.get(this.getListOptions(), (error, response, body) => this.findList(error, response, body));
+      present = !!this.secret.trello_list;
+    }
+    return present;
+  }
+
+  findList(error, response, body) {
+    if(!error) {
+      const lists = JSON.parse(body);
+      this.secret.trello_list = (lists.find((list) => {
+        return this.secret.trello_list_name.trim() == list.name.trim();
+      }) || {}).id;
+    }
   }
 
   cardsToMove(data) {
@@ -90,6 +108,13 @@ class Pr2Trello {
       }
       return arr;
     }, []);
+  }
+
+  getListOptions() {
+    return {
+      url: `${TRELLO_URL}boards/${this.secret.trello_board}/lists${this.authParams()}`,
+      qs: { fields: 'id,name' }
+    };
   }
 
   getCardsOptions() {
