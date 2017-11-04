@@ -34,6 +34,20 @@ let trelloCards = {
     {id: "e", idList: "pending"}
   ]
 };
+let trelloLists = [
+  {
+    id: "a",
+    name: " Pending !"
+  },
+  {
+    id: "b",
+    name: "Done"
+  },
+  {
+    id: "c",
+    name: "Freeze"
+  }
+];
 let described = null;
 
 
@@ -99,12 +113,20 @@ describe("Pr2Trello", function() {
       expect(described.procCards, "lalilulelo").to.throw();
     });
 
-    it("respond null when no cards found", function() {
-      sinon.spy(described, "ack");
+    it("respond cleanly when no cards found", function() {
+      sinon.spy(described, "nack");
 
       described.procCards(false, {}, JSON.stringify({cards: []}));
-      expect(described.ack.args[0]).to.eql([null]);
-      described.ack.restore();
+      expect(described.nack.called).to.be.true;
+      described.nack.restore();
+    });
+
+    it("respond cleanly when http error occur", function() {
+      sinon.spy(described, "nack");
+
+      described.procCards(true, {}, JSON.stringify({cards: []}));
+      expect(described.nack.called).to.be.true;
+      described.nack.restore();
     });
 
     it("trigger move cards", function() {
@@ -161,6 +183,83 @@ describe("Pr2Trello", function() {
     it("keep only card to move on the list", function() {
       cardIds = described.cardsToMove(trelloCards);
       expect(cardIds).to.eql(["a","b","e"]);
+    });
+  });
+
+  describe("getListId", function() {
+    it("trigger getCards when trello_list is present", function() {
+      sinon.stub(described, "getCards");
+      described.getListId()
+
+      expect(described.getCards.called).to.be.true;
+
+      described.getCards.restore();
+    });
+
+    it("trigger request and findList based on trello_list_nane when no trello_list", function() {
+      described =  new Pr2Trello({data: {trello_list_name: "aname"}}, callback);
+      sinon.stub(request, "get").callsFake((opt, cb) => cb());
+      sinon.stub(described, "findList");
+
+      described.getListId();
+
+      expect(request.get.called).to.be.true;
+      expect(described.findList.called).to.be.true;
+
+      request.get.restore();
+      described.findList.restore();
+    });
+
+    it("return false when no valid trello_list and trello_list_nane", function() {
+      described = new Pr2Trello({data: {}}, callback);
+      sinon.stub(described, "nack");
+
+      described.getListId();
+
+      expect(described.nack.called).to.be.true;
+
+      described.nack.restore();
+    });
+  })
+
+  describe("findList", function() {
+    it("assign the list id based on name and trigger getCards", function() {
+      described = new Pr2Trello({data: {trello_list_name: " Done   "}}, callback);
+      sinon.stub(described, "getCards");
+      described.findList(false, {}, JSON.stringify(trelloLists));
+
+      expect(described.secret.trello_list).to.eql("b");
+      expect(described.getCards.called).to.be.true;
+
+      described.getCards.restore();
+    });
+
+    it("when no list found, do nothing cleanly", function() {
+      described = new Pr2Trello({data: {trello_list_name: "Done"}}, callback);
+      sinon.stub(described, "getCards");
+      sinon.stub(described, "nack");
+      described.findList(false, {}, JSON.stringify([]));
+
+      expect(described.secret.trello_list).to.eql(undefined);
+      expect(described.getCards.called).to.be.false;
+      expect(described.nack.called).to.be.true;
+
+      described.getCards.restore();
+      described.nack.restore();
+    });
+
+    it("when error on list request, do nothing cleanly", function() {
+      described = new Pr2Trello({data: {trello_list_name: "Done"}}, callback);
+      sinon.stub(described, "getCards");
+      sinon.stub(described, "nack");
+      described.findList(true, {}, JSON.stringify([]));
+
+      expect(described.secret.trello_list).to.eql(undefined);
+      expect(described.getCards.called).to.be.false;
+      expect(described.nack.called).to.be.true;
+
+      described.getCards.restore();
+      described.nack.restore();
     });
   });
 
@@ -278,12 +377,22 @@ describe("Pr2Trello", function() {
     });
   });
 
-  // simple response
+  // simple success response
   describe("ack", function() {
     it("just respond with {ack: a_value}", function() {
       described = new Pr2Trello(context, sinon.spy());
       described.ack("hello");
       expect([null, {ack: "hello"}]).to.eql(described.respond.args[0]);
-    })
+    });
+  });
+
+  // simple error response
+  describe("nack", function() {
+    it("just respond with {nack: a_value}", function() {
+      described = new Pr2Trello(context, sinon.spy());
+      described.nack("hello");
+      expect([null, {nack: "hello"}]).to.eql(described.respond.args[0]);
+    });
+
   });
 });
