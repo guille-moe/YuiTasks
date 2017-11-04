@@ -17,14 +17,41 @@ class Pr2Trello {
     this.data     = context.body;
     this.secret   = context.data;
     this.respond  = cb;
-    this.cardIds = [];
+    this.cardIds  = [];
+    this.errors   = [];
   }
 
   run() {
     if (this.needToClose()) {
-      this.getCards();
+      this.getListId();
     } else {
-      this.ack(false);
+      this.nack("PR not supposed to move");
+    }
+  }
+
+  getListId() {
+    if (this.secret.trello_list) {
+      this.getCards();
+    } else if (!this.secret.trello_list && this.secret.trello_list_name) {
+      http.get(this.getListOptions(), (error, response, body) => this.findList(error, response, body));
+    } else {
+      this.nack("invalid Trello List id");
+    }
+  }
+
+  findList(error, response, body) {
+    if(!error) {
+      const lists = JSON.parse(body);
+      this.secret.trello_list = (lists.find((list) => {
+        return this.secret.trello_list_name.trim() == list.name.trim();
+      }) || {}).id;
+      if (!!this.secret.trello_list) {
+        this.getCards();
+      } else {
+        this.nack("trello api no list found in: body");
+      }
+    } else {
+      this.nack(`trello api error on list lookup: \n${error}`);
     }
   }
 
@@ -33,16 +60,17 @@ class Pr2Trello {
   }
 
   procCards(error, response, body) {
-    if (error) {
-      throw new Error(error);
-    }
-    this.cardIds = this.cardsToMove(JSON.parse(body));
-    if (this.cardIds.length > 0) {
-      for(let cardId of this.cardIds) {
-        this.moveCard(cardId);
+    if (!error) {
+      this.cardIds = this.cardsToMove(JSON.parse(body));
+      if (this.cardIds.length > 0) {
+        for(let cardId of this.cardIds) {
+          this.moveCard(cardId);
+        }
+      } else {
+        this.nack("trello api no cards found");
       }
     } else {
-      this.ack(null);
+      this.nack(`trello api error on cards search: \n${error}`);
     }
   }
 
@@ -76,29 +104,11 @@ class Pr2Trello {
   }
 
   hasTrelloInfo() {
-    return !!this.secret.trello_key && !!this.secret.trello_token && !!this.secret.trello_board && this.hasListId();
+    return !!this.secret.trello_key && !!this.secret.trello_token && !!this.secret.trello_board;
   }
 
   needToMove(card) {
     return card.idList != this.secret.trello_list;
-  }
-
-  hasListId() {
-    let present = !!this.secret.trello_list;
-    if (!present && this.secret.trello_list_name) {
-      http.get(this.getListOptions(), (error, response, body) => this.findList(error, response, body));
-      present = !!this.secret.trello_list;
-    }
-    return present;
-  }
-
-  findList(error, response, body) {
-    if(!error) {
-      const lists = JSON.parse(body);
-      this.secret.trello_list = (lists.find((list) => {
-        return this.secret.trello_list_name.trim() == list.name.trim();
-      }) || {}).id;
-    }
   }
 
   cardsToMove(data) {
@@ -143,5 +153,9 @@ class Pr2Trello {
 
   ack(val) {
     this.respond(null, {ack: val});
+  }
+
+  nack(val) {
+    this.respond(null, {nack: val});
   }
 }
