@@ -100,7 +100,7 @@ class Pr2Trello {
   }
 
   isPRValidOwner() {
-    return this.data.pull_request.user.login == this.secret.user;
+    return !this.secret.user || this.data.pull_request.user.login == this.secret.user;
   }
 
   hasTrelloInfo() {
