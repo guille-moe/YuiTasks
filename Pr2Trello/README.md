@@ -24,7 +24,7 @@ On Webtask.io you have with this task two way to config:
 
 | name | description | recommended type | optional |
 | ---- | ----------- | ---------------- | -------- |
-| user | your github username to restrict what PR can be processed | `query_string` or `secret` | no |
+| user | your github username to restrict what PR can be processed | `query_string` or `secret` | yes |
 | trello_board | id of your trello board, ex: `"598c15814ee020bf589d1382"` | `query_string` or `secret` | no |
 | trello_list | id of your trello list where you need to move the card, ex: `"598c16b57348b9ce2dcd30e2"`| `query_string` or `secret` | yes if you use `trello_list_name` |
 | trello_list_name | name of your trello list where you need to move the card, ex: `"Done !"`| `query_string` or `secret` | yes if you use `trello_list` |

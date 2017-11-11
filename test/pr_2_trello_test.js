@@ -323,6 +323,20 @@ describe("Pr2Trello", function() {
       }, callback);
       expect(badDescribed.isPRValidOwner()).to.be.false;
     });
+
+    it("pass when no user is provided by conf", function() {
+      const noUserConfDescribed = new Pr2Trello({
+        body: {
+          pull_request: {
+            user: {
+              login: "unknow"
+            }
+          }
+        },
+        data: {}
+      }, callback);
+      expect(noUserConfDescribed.isPRValidOwner()).to.be.true;
+    });
   });
 
   describe("hasTrelloInfo", function() {
