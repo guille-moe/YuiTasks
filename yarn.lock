@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+addressparser@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/addressparser/-/addressparser-1.0.1.tgz#47afbe1a2a9262191db6838e4fd1d39b40821746"
+
 ajv@^4.9.1:
   version "4.11.8"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-4.11.8.tgz#82ffb02b29e662ae53bdc20af15947706739c536"
@@ -63,6 +67,17 @@ brace-expansion@^1.1.7:
 browser-stdout@1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/browser-stdout/-/browser-stdout-1.3.0.tgz#f351d32969d32fa5d7a5567154263d928ae3bd1f"
+
+buildmail@3.8.0:
+  version "3.8.0"
+  resolved "https://registry.yarnpkg.com/buildmail/-/buildmail-3.8.0.tgz#191b6369710b2bd35a7819edf2cb0b642efd65bf"
+  dependencies:
+    addressparser "1.0.1"
+    libbase64 "0.1.0"
+    libmime "2.0.3"
+    libqp "1.1.0"
+    nodemailer-fetch "1.4.0"
+    nodemailer-shared "1.0.5"
 
 caseless@~0.12.0:
   version "0.12.0"
@@ -246,6 +261,21 @@ http-signature@~1.1.0:
     jsprim "^1.2.2"
     sshpk "^1.7.0"
 
+httpntlm@1.6.1:
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/httpntlm/-/httpntlm-1.6.1.tgz#ad01527143a2e8773cfae6a96f58656bb52a34b2"
+  dependencies:
+    httpreq ">=0.4.22"
+    underscore "~1.7.0"
+
+httpreq@>=0.4.22:
+  version "0.4.24"
+  resolved "https://registry.yarnpkg.com/httpreq/-/httpreq-0.4.24.tgz#4335ffd82cd969668a39465c929ac61d6393627f"
+
+iconv-lite@0.4.13:
+  version "0.4.13"
+  resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.13.tgz#1f88aba4ab0b1508e8312acc39345f36e992e2f2"
+
 inflight@^1.0.4:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/inflight/-/inflight-1.0.6.tgz#49bd6331d7d02d0c09bc910a1075ba8165b56df9"
@@ -256,6 +286,10 @@ inflight@^1.0.4:
 inherits@2:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.3.tgz#633c2c83e3da42a502f52466022480f4208261de"
+
+ip@^1.1.2:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/ip/-/ip-1.1.5.tgz#bdded70114290828c0a039e72ef25f5aaec4354a"
 
 is-typedarray@~1.0.0:
   version "1.0.0"
@@ -304,6 +338,22 @@ just-extend@^1.1.22:
   version "1.1.22"
   resolved "https://registry.yarnpkg.com/just-extend/-/just-extend-1.1.22.tgz#3330af756cab6a542700c64b2e4e4aa062d52fff"
 
+libbase64@0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/libbase64/-/libbase64-0.1.0.tgz#62351a839563ac5ff5bd26f12f60e9830bb751e6"
+
+libmime@2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/libmime/-/libmime-2.0.3.tgz#55751aa832d31492363df3dd810580dfd59d080c"
+  dependencies:
+    iconv-lite "0.4.13"
+    libbase64 "0.1.0"
+    libqp "1.1.0"
+
+libqp@1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/libqp/-/libqp-1.1.0.tgz#f5e6e06ad74b794fb5b5b66988bf728ef1dedbe8"
+
 lodash.get@^4.4.2:
   version "4.4.2"
   resolved "https://registry.yarnpkg.com/lodash.get/-/lodash.get-4.4.2.tgz#2d177f652fa31e939b4438d5341499dfa3825e99"
@@ -315,6 +365,13 @@ lolex@^1.6.0:
 lolex@^2.1.3:
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/lolex/-/lolex-2.1.3.tgz#53f893bbe88c80378156240e127126b905c83087"
+
+mailcomposer@3.10.0:
+  version "3.10.0"
+  resolved "https://registry.yarnpkg.com/mailcomposer/-/mailcomposer-3.10.0.tgz#ce55c7b488ae84520a38f221aa12c4ce526d5168"
+  dependencies:
+    buildmail "3.8.0"
+    libmime "2.0.3"
 
 mime-db@~1.30.0:
   version "1.30.0"
@@ -374,6 +431,55 @@ nise@^1.1.1:
     lolex "^1.6.0"
     path-to-regexp "^1.7.0"
     text-encoding "^0.6.4"
+
+nodemailer-direct-transport@3.2.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/nodemailer-direct-transport/-/nodemailer-direct-transport-3.2.0.tgz#f327616922422b2bb6c9695ba248b3a4d773b231"
+  dependencies:
+    nodemailer-shared "1.0.5"
+    smtp-connection "2.8.0"
+
+nodemailer-fetch@1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/nodemailer-fetch/-/nodemailer-fetch-1.4.0.tgz#08a6174f755aba6ad9d88133355a70c1dee4e698"
+
+nodemailer-shared@1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/nodemailer-shared/-/nodemailer-shared-1.0.5.tgz#6de64484d47944422bb5f0886fffd908ada4ce5e"
+  dependencies:
+    nodemailer-fetch "1.4.0"
+
+nodemailer-smtp-pool@2.7.0:
+  version "2.7.0"
+  resolved "https://registry.yarnpkg.com/nodemailer-smtp-pool/-/nodemailer-smtp-pool-2.7.0.tgz#00bdcf0f4cd5d6313f3e89397e5dde199acc9b0f"
+  dependencies:
+    nodemailer-shared "1.0.5"
+    nodemailer-wellknown "0.1.10"
+    smtp-connection "2.8.0"
+
+nodemailer-smtp-transport@2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/nodemailer-smtp-transport/-/nodemailer-smtp-transport-2.6.0.tgz#f73be795bfbf6921c34aac655f170eb393dceff4"
+  dependencies:
+    nodemailer-shared "1.0.5"
+    nodemailer-wellknown "0.1.10"
+    smtp-connection "2.8.0"
+
+nodemailer-wellknown@0.1.10:
+  version "0.1.10"
+  resolved "https://registry.yarnpkg.com/nodemailer-wellknown/-/nodemailer-wellknown-0.1.10.tgz#586db8101db30cb4438eb546737a41aad0cf13d5"
+
+nodemailer@2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-2.5.0.tgz#9cb782b049f4d62e17022dcbe743c3b07a2de55b"
+  dependencies:
+    libmime "2.0.3"
+    mailcomposer "3.10.0"
+    nodemailer-direct-transport "3.2.0"
+    nodemailer-shared "1.0.5"
+    nodemailer-smtp-pool "2.7.0"
+    nodemailer-smtp-transport "2.6.0"
+    socks "1.1.9"
 
 oauth-sign@~0.8.1:
   version "0.8.2"
@@ -461,11 +567,29 @@ sinon@^4.0.1:
     text-encoding "0.6.4"
     type-detect "^4.0.0"
 
+smart-buffer@^1.0.4:
+  version "1.1.15"
+  resolved "https://registry.yarnpkg.com/smart-buffer/-/smart-buffer-1.1.15.tgz#7f114b5b65fab3e2a35aa775bb12f0d1c649bf16"
+
+smtp-connection@2.8.0:
+  version "2.8.0"
+  resolved "https://registry.yarnpkg.com/smtp-connection/-/smtp-connection-2.8.0.tgz#6649220a80dbb2c72bb0f394b8d7c0129f622105"
+  dependencies:
+    httpntlm "1.6.1"
+    nodemailer-shared "1.0.5"
+
 sntp@1.x.x:
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/sntp/-/sntp-1.0.9.tgz#6541184cc90aeea6c6e7b35e2659082443c66198"
   dependencies:
     hoek "2.x.x"
+
+socks@1.1.9:
+  version "1.1.9"
+  resolved "https://registry.yarnpkg.com/socks/-/socks-1.1.9.tgz#628d7e4d04912435445ac0b6e459376cb3e6d691"
+  dependencies:
+    ip "^1.1.2"
+    smart-buffer "^1.0.4"
 
 sshpk@^1.7.0:
   version "1.13.1"
@@ -514,6 +638,10 @@ tweetnacl@^0.14.3, tweetnacl@~0.14.0:
 type-detect@^4.0.0:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/type-detect/-/type-detect-4.0.3.tgz#0e3f2670b44099b0b46c284d136a7ef49c74c2ea"
+
+underscore@~1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.7.0.tgz#6bbaf0877500d36be34ecaa584e0db9fef035209"
 
 uuid@^3.0.0:
   version "3.1.0"
