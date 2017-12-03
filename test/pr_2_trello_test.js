@@ -407,6 +407,5 @@ describe("Pr2Trello", function() {
       described.nack("hello");
       expect([null, {nack: "hello"}]).to.eql(described.respond.args[0]);
     });
-
   });
 });
