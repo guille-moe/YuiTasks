@@ -20,6 +20,8 @@ class JSON2Mail {
   run() {
     if (this.canSend()) {
       this.sendMail();
+    } else {
+      this.nack("can't send an email with current data");
     }
   }
 

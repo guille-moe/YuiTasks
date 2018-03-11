@@ -66,11 +66,13 @@ describe("JSON2Mail", function() {
     it("never send mail when data are invalid", function() {
       sinon.stub(described, "canSend").returns(false);
       sinon.stub(described, "sendMail");
+      sinon.stub(described, "nack");
 
       described.run();
 
       expect(described.canSend.called).to .be.true;
       expect(described.sendMail.called).to.be.false;
+      expect(described.nack.called).to    .be.true
     });
   });
 
