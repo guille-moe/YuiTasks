@@ -8,11 +8,12 @@ const sinon     = require("sinon");
 let callback = () => {};
 let context = {
   data: {
-    user:         "guille-moe",
-    trello_key:   "0wwqdkjslh87we89230qwjkhsday8q21",
-    trello_token: "1c3db5eb5a9f9dc4a7726b19be97fa0bd2b8aec70a0e2a4b52514bec8f6a8ad2",
-    trello_board: "4eea795ec2c5008e270d1e2e",
-    trello_list:  "59cd0116971611a3db0f7491"
+    user:               "guille-moe",
+    trello_key:         "0wwqdkjslh87we89230qwjkhsday8q21",
+    trello_token:       "1c3db5eb5a9f9dc4a7726b19be97fa0bd2b8aec70a0e2a4b52514bec8f6a8ad2",
+    trello_board:       "4eea795ec2c5008e270d1e2e",
+    trello_list:        "59cd0116971611a3db0f7491",
+    trello_search_list: ["first", "second"],
   },
   body: {
     action: "closed",
@@ -25,15 +26,13 @@ let context = {
     }
   }
 };
-let trelloCards = {
-  cards: [
-    {id: "a", idList: "pending"},
-    {id: "b", idList: "pending"},
-    {id: "c", idList: context.data.trello_list},
-    {id: "d", idList: context.data.trello_list},
-    {id: "e", idList: "pending"}
-  ]
-};
+let trelloCards = [
+  {id: "a", attachments: [{url: context.body.pull_request.html_url}]},
+  {id: "b", attachments: [{url: context.body.pull_request.html_url}]},
+  {id: "c", attachments: []},
+  {id: "d", attachments: []},
+  {id: "e", attachments: [{url: context.body.pull_request.html_url}]}
+];
 let trelloLists = [
   {
     id: "a",
@@ -92,15 +91,15 @@ describe("Pr2Trello", function() {
   });
 
   describe("getCards", function() {
-    it("do an http get with params and callback", function(){
+    it("do many http get with params and callback by list to search ids", function(){
       sinon.stub(request, "get").callsFake((opt, cb) => cb(false, {}, {}));
       sinon.spy(described, "getCardsOptions");
       sinon.stub(described, "procCards");
 
       described.getCards();
-      expect(request.get.args[0][0]).to.eql(described.getCardsOptions());
-      expect(described.getCardsOptions.called).to.be.true;
-      expect(described.procCards.called).to.be.true;
+      expect(request.get.args[0][0]).to.eql(described.getCardsOptions('first'));
+      expect(request.get.args[1][0]).to.eql(described.getCardsOptions('second'));
+      expect(described.procCards.callCount).to.eql(2);
 
       request.get.restore();
       described.getCardsOptions.restore();
@@ -109,39 +108,61 @@ describe("Pr2Trello", function() {
   });
 
   describe("procCards", function() {
-    it("throw when an http error occur", function() {
-      expect(described.procCards, "lalilulelo").to.throw();
+    describe('on errors', function() {
+      it("throw when an http error occur", function() {
+        expect(described.procCards, "lalilulelo").to.throw();
+      });
+
+      it("respond cleanly when no cards found at last call", function() {
+        sinon.spy(described, "nack");
+
+        described.listCount = 1;
+        described.procCards(false, {}, JSON.stringify([]));
+        expect(described.nack.called).to.be.true;
+        described.nack.restore();
+      });
+
+      it("respond cleanly when http error occur", function() {
+        sinon.spy(described, "nack");
+
+        described.procCards(true, {}, JSON.stringify({cards: []}));
+        expect(described.nack.called).to.be.true;
+        described.nack.restore();
+      });
     });
 
-    it("respond cleanly when no cards found", function() {
-      sinon.spy(described, "nack");
+    describe('when listCount < of list_search ids', function() {
+      it('add cards to move but not moving it', function() {
+        sinon.spy(described, "cardsToMove");
+        sinon.stub(described, "moveCard");
 
-      described.procCards(false, {}, JSON.stringify({cards: []}));
-      expect(described.nack.called).to.be.true;
-      described.nack.restore();
+        described.procCards(false, {}, JSON.stringify(trelloCards));
+
+        expect(described.cardIds).to.eql(["a","b","e"]);
+        expect(described.cardsToMove.called).to.be.true;
+        expect(described.moveCard.callCount).to.eql(0); // never call moveCard until fetch all cards from all lists
+
+        described.cardsToMove.restore();
+        described.moveCard.restore();
+      });
     });
 
-    it("respond cleanly when http error occur", function() {
-      sinon.spy(described, "nack");
+    describe('when listCount == list_search_ids', function () {
+      it("trigger move cards", function() {
+        sinon.spy(described, "cardsToMove");
+        sinon.stub(described, "moveCard");
 
-      described.procCards(true, {}, JSON.stringify({cards: []}));
-      expect(described.nack.called).to.be.true;
-      described.nack.restore();
+        described.listCount = 1;
+        described.procCards(false, {}, JSON.stringify(trelloCards));
+
+        expect(described.cardIds).to.eql(["a","b","e"]);
+        expect(described.cardsToMove.called).to.be.true;
+        expect(described.moveCard.callCount).to.eql(3); // 3 entry matching cardsToMove see below
+
+        described.cardsToMove.restore();
+        described.moveCard.restore();
+      });
     });
-
-    it("trigger move cards", function() {
-      sinon.spy(described, "cardsToMove");
-      sinon.stub(described, "moveCard");
-
-      described.procCards(false, {}, JSON.stringify(trelloCards));
-      
-      expect(described.cardIds).to.eql(["a","b","e"]);
-      expect(described.cardsToMove.called).to.be.true;
-      expect(described.moveCard.callCount).to.eql(3); // 3 entry matching cardsToMove see below
-
-      described.cardsToMove.restore();
-      described.moveCard.restore();
-    })
   });
 
   describe("moveCard", function() {
@@ -355,8 +376,8 @@ describe("Pr2Trello", function() {
 
   describe("needToMove", function() {
     it("check if trello card is not in the good list", function() {
-      expect(described.needToMove({idList: "unknow list"})).to.be.true;
-      expect(described.needToMove({idList: context.data.trello_list})).to.be.false;
+      expect(described.needToMove({attachments: [{url: 'a'}, {url: context.body.pull_request.html_url}]})).to.be.true;
+      expect(described.needToMove({attachments: []})).to.be.false;
     });
   });
 
@@ -369,14 +390,11 @@ describe("Pr2Trello", function() {
 
   describe("getCardsOptions", function() {
     it("return options to find cards with PR url", function() {
-      expect(described.getCardsOptions()).to.eql({
-        url: "https://api.trello.com/1/search?key=0wwqdkjslh87we89230qwjkhsday8q21&token=1c3db5eb5a9f9dc4a7726b19be97fa0bd2b8aec70a0e2a4b52514bec8f6a8ad2",
+      expect(described.getCardsOptions('listId')).to.eql({
+        url: "https://api.trello.com/1/lists/listId/cards?key=0wwqdkjslh87we89230qwjkhsday8q21&token=1c3db5eb5a9f9dc4a7726b19be97fa0bd2b8aec70a0e2a4b52514bec8f6a8ad2",
         qs: {
-          query: "/guille-moe/YuiTasks/pull/1",
-          idBoards: "4eea795ec2c5008e270d1e2e",
-          modelTypes: "cards",
-          card_attachments: "true",
-          partial: "false"
+          attachments: "true",
+          fiels: "attachments"
         }
       });
     });

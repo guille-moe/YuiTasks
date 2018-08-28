@@ -14,11 +14,12 @@ module.exports = function(context, cb) {
 
 class Pr2Trello {
   constructor(context, cb) {
-    this.data     = context.body;
-    this.secret   = context.data;
-    this.respond  = cb;
-    this.cardIds  = [];
-    this.errors   = [];
+    this.data      = context.body;
+    this.secret    = context.data;
+    this.respond   = cb;
+    this.listCount = 0;
+    this.cardIds   = [];
+    this.errors    = [];
   }
 
   run() {
@@ -56,21 +57,29 @@ class Pr2Trello {
   }
 
   getCards() {
-    http.get(this.getCardsOptions(), (error, response, body) => this.procCards(error, response, body));
+    if (typeof(this.secret.trello_search_list) == "string") {
+      this.secret.trello_search_list = [ this.secret.trello_search_list ];
+    }
+    this.secret.trello_search_list.forEach((id) => {
+      http.get(this.getCardsOptions(id), (error, response, body) => this.procCards(error, response, body));
+    });
   }
 
   procCards(error, response, body) {
     if (!error) {
-      this.cardIds = this.cardsToMove(JSON.parse(body));
+      this.cardIds.push(...this.cardsToMove(JSON.parse(body)));
+    } else {
+      this.nack(`trello api error on cards search: \n${error}`);
+    }
+    this.listCount += 1
+    if (this.listCount == this.secret.trello_search_list.length) {
       if (this.cardIds.length > 0) {
         for(let cardId of this.cardIds) {
-          this.moveCard(cardId);
+            this.moveCard(cardId);
         }
       } else {
         this.nack("trello api no cards found");
       }
-    } else {
-      this.nack(`trello api error on cards search: \n${error}`);
     }
   }
 
@@ -104,15 +113,18 @@ class Pr2Trello {
   }
 
   hasTrelloInfo() {
-    return !!this.secret.trello_key && !!this.secret.trello_token && !!this.secret.trello_board;
+    return !!this.secret.trello_key && !!this.secret.trello_token && !!this.secret.trello_board && !!this.secret.trello_search_list;
   }
 
   needToMove(card) {
-    return card.idList != this.secret.trello_list;
+    const index = card.attachments.findIndex((attachment) => {
+      return attachment.url == this.data.pull_request.html_url;
+    });
+    return index > -1;
   }
 
   cardsToMove(data) {
-    return data.cards.reduce((arr, card) => {
+    return data.reduce((arr, card) => {
       if (this.needToMove(card)) {
         arr.push(card.id);
       }
@@ -127,15 +139,12 @@ class Pr2Trello {
     };
   }
 
-  getCardsOptions() {
+  getCardsOptions(id) {
     return {
-      url: `${TRELLO_URL}search${this.authParams()}`,
+      url: `${TRELLO_URL}lists/${id}/cards${this.authParams()}`,
       qs: {
-        query: URL.parse(this.data.pull_request.html_url).pathname,
-        idBoards: this.secret.trello_board,
-        modelTypes: "cards",
-        card_attachments: "true",
-        partial: "false"
+        attachments: "true",
+        fiels: "attachments"
       }
     };
   }
